@@ -67,7 +67,7 @@ void rotateToRight(unsigned char velocity) {
   digitalWrite(PIN_W_RIGHT_2, LOW);
 }
 
-void theresObstacle(int range) {
+bool theresObstacle(int range) {
   long t, distance;
 
   digitalWrite(PIN_SENSOR_TRIGGER, HIGH);
