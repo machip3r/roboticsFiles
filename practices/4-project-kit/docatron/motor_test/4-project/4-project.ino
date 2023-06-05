@@ -1,6 +1,3 @@
-#include <EEPROM.h>
-#include <stdlib.h>
-
 #define PIN_W_LEFT_1 6
 #define PIN_W_LEFT_2 7
 #define PIN_W_RIGHT_1 5
@@ -9,8 +6,9 @@
 #define PIN_V_LEFT 10
 #define PIN_V_RIGHT 11
 
-#define PIN_SENSOR_TRIGGER 8
+#define PIN_SENSOR_TRIGGER 3
 #define PIN_SENSOR_REPEATER 9
+#define PIN_SENSOR_LED 13
 
 #define SIZE_MAP 5
 
@@ -26,6 +24,11 @@ int gridMap[SIZE_MAP][SIZE_MAP] = {
     {0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0}},
     trajectBlocks = 8, actualX = 2, actualY = 2;
+
+// left 96, 103
+// right 105, 100
+unsigned char vLeft = 100, vRight = 110, vRotationLeftL = 96, vRotationRightL = 103, vRotationLeftR = 105, vRotationRightR = 100;
+int tStartDelay = 10000, rangeDetection = 40, tForward = 1000, tRotationL = 410, tRotationR = 410, tCheckObstacles = 2000, tStopDelay = 10000;
 
 bool mapping = false;
 
@@ -75,66 +78,74 @@ void rotateToRight(unsigned char velocityL, unsigned char velocityR) {
 
 bool theresObstacle(int range) {
     long t, distance;
+    int counter = 0;
 
-    digitalWrite(PIN_SENSOR_TRIGGER, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(PIN_SENSOR_TRIGGER, LOW);
+    while (counter < 2) {
+        digitalWrite(PIN_SENSOR_TRIGGER, LOW);
+        delayMicroseconds(2);
+        digitalWrite(PIN_SENSOR_TRIGGER, HIGH);
+        delayMicroseconds(10);
+        digitalWrite(PIN_SENSOR_TRIGGER, LOW);
 
-    t = pulseIn(PIN_SENSOR_REPEATER, HIGH);
-    distance = (t / 59);
+        t = pulseIn(PIN_SENSOR_REPEATER, HIGH);
+        /* distance = (t * 0.034 / 2); */
+        distance = (t / 59);
 
-    /* Serial.print("Distance: ");
-    Serial.print(distance);
-    Serial.print("cm");
-    Serial.println();
-    delay(100); */
+        delay(300);
+        counter++;
+    }
 
-    return (((int)distance) < range);
+    return ((int)(distance) <= range);
 }
 
-/* int readIntFromEEPROM(int address) {
-    return (EEPROM.read(address) << 8) + EEPROM.read(address + 1);
-}
+void showMap(int gridMap[SIZE_MAP][SIZE_MAP]) {
+    /* digitalWrite(PIN_SENSOR_LED, HIGH);
+    delay(1000);
+    digitalWrite(PIN_SENSOR_LED, LOW);
+    delay(1000);
+    digitalWrite(PIN_SENSOR_LED, HIGH);
+    delay(1000);
+    digitalWrite(PIN_SENSOR_LED, LOW);
+    delay(1000);
+    digitalWrite(PIN_SENSOR_LED, HIGH);
+    delay(1000);
+    digitalWrite(PIN_SENSOR_LED, LOW);
+    delay(1000); */
 
-void writeIntEEPROM(int address, int number) {
-    EEPROM.write(address, number >> 8);
-    EEPROM.write(address + 1, number & 0xFF);
-} */
-
-void clearEEPROM() {
-    for (int i = 0; i < EEPROM.length(); i++)
-        EEPROM.write(i, 0);
-}
-
-/* void saveMap(int gridMap[SIZE_MAP][SIZE_MAP], int address) { */
-void saveMap(int gridMap[SIZE_MAP][SIZE_MAP]) {
-    char* intStr = "";
-
-    /* for (int i = 0; i < SIZE_MAP; i++)
-        for (int j = 0; j < SIZE_MAP; j++)
+    for (int i = 0; i < SIZE_MAP; i++) {
+        for (int j = 0; j < SIZE_MAP; j++) {
             if ((i < 1 || i > 3) && (j < 1 || j > 3)) {
-                if (gridMap[i][j] == 1)
-                    intStr = strcat(intStr, "1");
-                else if (gridMap[i][j] == 2)
-                    intStr = strcat(intStr, "0");
+                /* if (gridMap[i][j] == 1) {
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
+                    delay(500);
+                    digitalWrite(PIN_SENSOR_LED, LOW);
+                    delay(500);
+                } else if (gridMap[i][j] == 2) {
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
+                    delay(166);
+                    digitalWrite(PIN_SENSOR_LED, LOW);
+                    delay(166);
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
+                    delay(166);
+                    digitalWrite(PIN_SENSOR_LED, LOW);
+                    delay(166);
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
+                    delay(166);
+                    digitalWrite(PIN_SENSOR_LED, LOW);
+                    delay(166);
+                } */
+
+                digitalWrite(PIN_SENSOR_LED, HIGH);
+                delay(500);
+                digitalWrite(PIN_SENSOR_LED, LOW);
+                delay(500);
+
+                /* delay(1000); */
             }
+        }
+    }
 
-    char* endptr;
-    int number = strtol(intStr, &endptr, 2);
-
-    writeIntEEPROM(address, number); */
-
-    int counterObstacleBlocks = 0;
-
-    for (int i = 0; i < SIZE_MAP; i++)
-        for (int j = 0; j < SIZE_MAP; j++)
-            if ((i < 1 || i > 3) && (j < 1 || j > 3)) {
-                if (gridMap[i][j] == 1)
-                    EEPROM.write(counterObstacleBlocks, 1);
-                else if (gridMap[i][j] == 2)
-                    EEPROM.write(counterObstacleBlocks, 0);
-                counterObstacleBlocks++;
-            }
+    digitalWrite(PIN_SENSOR_LED, LOW);
 }
 
 void setup() {
@@ -150,6 +161,7 @@ void setup() {
 
     pinMode(PIN_SENSOR_TRIGGER, OUTPUT);
     pinMode(PIN_SENSOR_REPEATER, INPUT);
+    pinMode(PIN_SENSOR_LED, OUTPUT);
 
     digitalWrite(PIN_SENSOR_TRIGGER, LOW);
 }
@@ -157,14 +169,9 @@ void setup() {
 void loop() {
     /* int address = 33; */
 
-    // left 96, 103
-    // right 105, 100
-    unsigned char vLeft = 100, vRight = 110, vRotationLeftL = 96, vRotationRightL = 103, vRotationLeftR = 105, vRotationRightR = 100;
-    int tStartDelay = 5000, rangeDetection = 10, tForward = 1000, tRotationL = 410, tRotationR = 410, tCheckObstacles = 2000, tStopFinal = 20000;
+    delay(tStartDelay);
 
     if (mapping) {
-        delay(tStartDelay);
-
         for (int i = 0; i < (trajectBlocks + 2); i++) {
             if (!i) {
                 // move to (3, 2)
@@ -190,15 +197,19 @@ void loop() {
                   | 0 0 0 0 0 |
                 */
                 stopMoving();
-                if (theresObstacle(rangeDetection))
+                if (theresObstacle(rangeDetection)) {
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
                     gridMap[actualX + 1][actualY] = 1;
+                } else
+                    gridMap[actualX + 1][actualY] = 2;
                 delay(tCheckObstacles);
+                digitalWrite(PIN_SENSOR_LED, LOW);
 
                 // left 96, 103
                 vRotationLeftL = 96;
                 vRotationRightL = 103;
                 // left 410
-                tRotationL = 400;
+                tRotationL = 260;
 
                 rotateToLeft(vRotationLeftL, vRotationRightL);
                 delay(tRotationL);
@@ -237,7 +248,7 @@ void loop() {
                 vRotationLeftR = 105;
                 vRotationRightR = 100;
                 // right 410
-                tRotationR = 650;
+                tRotationR = 600;
 
                 rotateToRight(vRotationLeftR, vRotationRightR);
                 delay(tRotationR);
@@ -252,7 +263,8 @@ void loop() {
                   | 0 0 0 0 0 | | 0 0 0 0 0 | | 0 0 0 0 0 | | 0 0 0 ? 0 |
                 */
                 stopMoving();
-                if (theresObstacle(rangeDetection))
+                if (theresObstacle(rangeDetection)) {
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
                     switch (i) {
                         case 1:
                             gridMap[actualX + 1][actualY] = 1;
@@ -267,7 +279,7 @@ void loop() {
                             gridMap[actualX][actualY + 1] = 1;
                             break;
                     }
-                else
+                } else
                     switch (i) {
                         case 1:
                             gridMap[actualX + 1][actualY] = 2;
@@ -283,12 +295,13 @@ void loop() {
                             break;
                     }
                 delay(tCheckObstacles);
+                digitalWrite(PIN_SENSOR_LED, LOW);
 
                 // left 96, 103
                 vRotationLeftL = 96;
                 vRotationRightL = 103;
                 // left 410
-                tRotationL = 500;
+                tRotationL = 400;
 
                 rotateToLeft(vRotationLeftL, vRotationRightL);
                 delay(tRotationL);
@@ -303,7 +316,8 @@ void loop() {
                   | 0 0 0 0 0 | | 0 0 0 0 0 | | 0 ? 0 0 0 | | 0 0 0 0 0 |
                 */
                 stopMoving();
-                if (theresObstacle(rangeDetection))
+                if (theresObstacle(rangeDetection)) {
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
                     switch (i) {
                         case 1:
                             gridMap[actualX][actualY - 1] = 1;
@@ -318,7 +332,7 @@ void loop() {
                             gridMap[actualX + 1][actualY] = 1;
                             break;
                     }
-                else
+                } else
                     switch (i) {
                         case 1:
                             gridMap[actualX][actualY - 1] = 2;
@@ -334,12 +348,13 @@ void loop() {
                             break;
                     }
                 delay(tCheckObstacles);
+                digitalWrite(PIN_SENSOR_LED, LOW);
 
                 // left 96, 103
                 vRotationLeftL = 96;
                 vRotationRightL = 103;
                 // left 410
-                tRotationL = 400;
+                tRotationL = 250;
 
                 rotateToLeft(vRotationLeftL, vRotationRightL);
                 delay(tRotationL);
@@ -389,7 +404,8 @@ void loop() {
                   | 0 0 0 0 0 | | 0 0 0 0 0 | | 0 0 ? 0 0 |
                 */
                 stopMoving();
-                if (theresObstacle(rangeDetection))
+                if (theresObstacle(rangeDetection)) {
+                    digitalWrite(PIN_SENSOR_LED, HIGH);
                     switch (i) {
                         case 2:
                             gridMap[actualX][actualY - 1] = 1;
@@ -401,7 +417,7 @@ void loop() {
                             gridMap[actualX][actualY + 1] = 1;
                             break;
                     }
-                else
+                } else
                     switch (i) {
                         case 2:
                             gridMap[actualX][actualY - 1] = 2;
@@ -414,12 +430,13 @@ void loop() {
                             break;
                     }
                 delay(tCheckObstacles);
+                digitalWrite(PIN_SENSOR_LED, LOW);
 
                 // left 96, 103
                 vRotationLeftL = 96;
                 vRotationRightL = 103;
                 // left 410
-                tRotationL = 450;
+                tRotationL = 300;
 
                 rotateToLeft(vRotationLeftL, vRotationRightL);
                 delay(tRotationL);
@@ -442,7 +459,7 @@ void loop() {
                 vRotationLeftL = 96;
                 vRotationRightL = 103;
                 // left 410
-                tRotationL = 450;
+                tRotationL = 300;
 
                 rotateToLeft(vRotationLeftL, vRotationRightL);
                 delay(tRotationL);
@@ -466,15 +483,40 @@ void loop() {
 
         stopMoving();
         /* saveMap(gridMap, address); */
-        saveMap(gridMap);
-        delay(tStopFinal);
+        /* saveMap(gridMap); */
+        delay(tStopDelay);
+
+        showMap(gridMap);
     } else {
         Serial.print("Map: ");
         Serial.println();
-        for (int i = 0; i < 16; i++)
+        /* for (int i = 0; i < 16; i++)
             Serial.print(EEPROM.read(i));
         Serial.println();
-        delay(tStopFinal);
-        clearEEPROM();
+        delay(tStopDelay);
+        clearEEPROM(); */
+        showMap(gridMap);
+
+        delay(tStopDelay);
     }
 }
+
+/*
+    | 0 0 0 1 0 |
+    | 0 - - - 1 |
+    | 1 - o - 0 |
+    | 0 - - - 0 |
+    | 0 1 1 1 0 |
+
+    | 0 0 0 0 0 |
+    | 0 - - - 0 |
+    | 0 - o - 0 |
+    | 0 - - - 0 |
+    | 0 0 0 0 0 |
+
+    | 0 0 0 0 0 |
+    | 0 - - - 1 |
+    | 0 - o - 1 |
+    | 0 - - - 1 |
+    | 0 0 0 0 0 |
+ */
