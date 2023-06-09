@@ -109,44 +109,47 @@ bool theresObstacle(int range) {
 /* FUNCIÓN PARA MOSTRAR EL MAPA CON EL PARPADEO DEL LED */
 void showMap(int gridMap[SIZE_MAP][SIZE_MAP]) {
     digitalWrite(PIN_SENSOR_LED, HIGH);
-    delay(1000);
+    delay(100);
     digitalWrite(PIN_SENSOR_LED, LOW);
-    delay(1000);
+    delay(100);
     digitalWrite(PIN_SENSOR_LED, HIGH);
-    delay(1000);
+    delay(100);
     digitalWrite(PIN_SENSOR_LED, LOW);
-    delay(1000);
+    delay(100);
     digitalWrite(PIN_SENSOR_LED, HIGH);
-    delay(1000);
+    delay(100);
     digitalWrite(PIN_SENSOR_LED, LOW);
-    delay(1000);
+    delay(100);
+    delay(5000);
 
     for (int i = 0; i < SIZE_MAP; i++) {
         for (int j = 0; j < SIZE_MAP; j++) {
             if (i < 1 || i > (SIZE_MAP - 2) || j < 1 || j > (SIZE_MAP - 2)) {
                 if (gridMap[i][j] == 1) {
                     digitalWrite(PIN_SENSOR_LED, HIGH);
-                    delay(500);
+                    delay(1000);
                     digitalWrite(PIN_SENSOR_LED, LOW);
-                    delay(500);
-                } else if (gridMap[i][j] == 2) {
+                    delay(1000);
+                } else if (gridMap[i][j] == 2 || gridMap[i][j] == 0) {
                     digitalWrite(PIN_SENSOR_LED, HIGH);
-                    delay(166);
+                    delay(100);
                     digitalWrite(PIN_SENSOR_LED, LOW);
-                    delay(166);
+                    delay(100);
                     digitalWrite(PIN_SENSOR_LED, HIGH);
-                    delay(166);
+                    delay(100);
                     digitalWrite(PIN_SENSOR_LED, LOW);
-                    delay(166);
+                    delay(100);
                     digitalWrite(PIN_SENSOR_LED, HIGH);
-                    delay(166);
+                    delay(100);
                     digitalWrite(PIN_SENSOR_LED, LOW);
-                    delay(166);
+                    delay(100);
                 }
 
-                delay(1000);
+                delay(5000);
             }
+            /* Serial.print(gridMap[i][j]); */
         }
+        /* Serial.print("\n"); */
     }
 
     digitalWrite(PIN_SENSOR_LED, LOW);
@@ -212,7 +215,8 @@ void loop() {
             /* vRotationLeftL = 96;
             vRotationRightL = 103; */
             // left 410
-            tRotationL = 260;
+            // last work 260
+            tRotationL = 330;
 
             rotateToLeft(vRotationLeftL, vRotationRightL);
             delay(tRotationL);
@@ -251,6 +255,7 @@ void loop() {
             /* vRotationLeftR = 105;
             vRotationRightR = 100; */
             // right 410
+            // last work 600
             tRotationR = 600;
 
             rotateToRight(vRotationLeftR, vRotationRightR);
@@ -304,7 +309,8 @@ void loop() {
             /* vRotationLeftL = 96;
             vRotationRightL = 103; */
             // left 410
-            tRotationL = 400;
+            // last work 400
+            tRotationL = 380;
 
             rotateToLeft(vRotationLeftL, vRotationRightL);
             delay(tRotationL);
@@ -357,7 +363,8 @@ void loop() {
             /* vRotationLeftL = 96;
             vRotationRightL = 103; */
             // left 410
-            tRotationL = 250;
+            // last work 260
+            tRotationL = 320;
 
             rotateToLeft(vRotationLeftL, vRotationRightL);
             delay(tRotationL);
@@ -392,7 +399,8 @@ void loop() {
             /* vRotationLeftR = 105;
             vRotationRightR = 100; */
             // right 410
-            tRotationR = 600;
+            // last work 600
+            tRotationR = 570;
 
             rotateToRight(vRotationLeftR, vRotationRightR);
             delay(tRotationR);
@@ -439,7 +447,8 @@ void loop() {
             /* vRotationLeftL = 96;
             vRotationRightL = 103; */
             // left 410
-            tRotationL = 300;
+            // last work 300
+            tRotationL = 320;
 
             rotateToLeft(vRotationLeftL, vRotationRightL);
             delay(tRotationL);
@@ -458,11 +467,15 @@ void loop() {
             // actualX = actualX;
             actualY--;
 
+            stopMoving();
+            delay(tCheckObstacles);
+
             // left 96, 103
             /* vRotationLeftL = 96;
             vRotationRightL = 103; */
             // left 410
-            tRotationL = 300;
+            // last work 300
+            tRotationL = 340;
 
             rotateToLeft(vRotationLeftL, vRotationRightL);
             delay(tRotationL);
